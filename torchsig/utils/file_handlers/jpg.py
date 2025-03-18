@@ -108,4 +108,18 @@ class JPGFileHandler(TorchSigFileHandler):
             except Exception as e:
                 print('Failed to save dataset')
                 print(e)
-    def load()
+   
+    def load(self,idx:int):
+
+        if not os.path.exists(self.datapath):
+            print(f'Path {os.path.exists(self.datapath)} does not exist')
+        elif os.path.exists(self.datapath+"/"+self.targets_pickle_filename):
+            with open(self.datapath+"/"+self.targets_pickle_filename, "rb") as pickle_file:
+                metadata_dict = pickle.load(pickle_file)
+        else:
+            metadata_dict=dict()
+
+        if idx in metadata_dict.keys():
+            image_file_name=self.image_file_prefix+'_'+str(idx)+self.image_file_extention
+            if not os.path.exists(self.datapath+'/'+image_file_name):
+                print(f'could not load filename: {self.datapath+'/'+image_file_name}')

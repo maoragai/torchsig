@@ -5,7 +5,7 @@ from torchsig.utils.file_handlers.base_handler import TorchSigFileHandler
 from torchsig.datasets.dataset_metadata import DatasetMetadata
 
 # Third Party
-import PIL
+from PIL import Image  # Explicitly import Image from PIL
 import numpy as np
 
 # Built-In
@@ -98,7 +98,7 @@ class JPGFileHandler(TorchSigFileHandler):
 
         for idx,(data,targets_metdada) in enumerate(zip(data,targets),start=start_idx):
             image_file_name=self.image_file_prefix+'_'+str(idx)+self.image_file_extention
-            image=PIL.Image.fromarray((data * 255).astype(np.uint8))
+            image=Image.fromarray((data * 255).astype(np.uint8))  # Use Image from PIL
             try:
                 image.save(self.datapath+"/"+image_file_name,'JPEG')
                 with open(self.datapath+"/"+self.targets_pickle_filename, 'wb') as handle:
@@ -109,7 +109,7 @@ class JPGFileHandler(TorchSigFileHandler):
                 print('Failed to save dataset')
                 print(e)
    
-    def load(self,idx:int):
+    def load(self,idx:int)->Tuple[np.ndarray, Dict[str, Any]] | Tuple[Any,...]:
 
         if not os.path.exists(self.datapath):
             print(f'Path {os.path.exists(self.datapath)} does not exist')
@@ -121,5 +121,15 @@ class JPGFileHandler(TorchSigFileHandler):
 
         if idx in metadata_dict.keys():
             image_file_name=self.image_file_prefix+'_'+str(idx)+self.image_file_extention
-            if not os.path.exists(self.datapath+'/'+image_file_name):
-                print(f'could not load filename: {self.datapath+'/'+image_file_name}')
+            image_file_path=str(self.datapath+'/'+image_file_name)
+            if not os.path.exists(image_file_path):
+                print(f'could not load filename: {image_file_path}')
+                return None
+            try:
+                spec_image=Image.open(image_file_path)  # Use Image from PIL
+
+            except Exception as e:
+                print(f'could not load image: {image_file_path}')
+                return None
+
+        return spec_image,metadata_dict

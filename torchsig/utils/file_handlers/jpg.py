@@ -108,4 +108,4 @@ class JPGFileHandler(TorchSigFileHandler):
             except Exception as e:
                 print('Failed to save dataset')
                 print(e)
-        
+    def load()

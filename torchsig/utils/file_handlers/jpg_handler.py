@@ -9,7 +9,7 @@ from PIL import Image  # Explicitly import Image from PIL
 import numpy as np
 
 # Built-In
-from typing import TYPE_CHECKING, Tuple, List, Dict, Any
+from typing import TYPE_CHECKING, Tuple, List, Dict, Any, Union
 import os
 import pickle
 
@@ -37,7 +37,7 @@ class JPGFileHandler(TorchSigFileHandler):
         batch_size: int,
         train: bool = None,
     ):
-        """Initializes the ZarrFileHandler with dataset metadata and write type.
+        """Initializes the JPGFileHandler with dataset metadata and write type.
 
         Args:
             dataset_metadata (DatasetMetadata): Metadata about the dataset, including 
@@ -109,27 +109,32 @@ class JPGFileHandler(TorchSigFileHandler):
                 print('Failed to save dataset')
                 print(e)
    
-    def load(self,idx:int)->Tuple[np.ndarray, Dict[str, Any]] | Tuple[Any,...]:
-
+    def load(self, idx: int) -> Union[Tuple[np.ndarray, Dict[str, Any]], Tuple[Any, ...]]:
         if not os.path.exists(self.datapath):
-            print(f'Path {os.path.exists(self.datapath)} does not exist')
-        elif os.path.exists(self.datapath+"/"+self.targets_pickle_filename):
-            with open(self.datapath+"/"+self.targets_pickle_filename, "rb") as pickle_file:
+            print(f'Path {self.datapath} does not exist')
+            return None, {}
+
+        if os.path.exists(self.datapath + "/" + self.targets_pickle_filename):
+            with open(self.datapath + "/" + self.targets_pickle_filename, "rb") as pickle_file:
                 metadata_dict = pickle.load(pickle_file)
         else:
-            metadata_dict=dict()
+            metadata_dict = {}
 
         if idx in metadata_dict.keys():
-            image_file_name=self.image_file_prefix+'_'+str(idx)+self.image_file_extention
-            image_file_path=str(self.datapath+'/'+image_file_name)
+            image_file_name = self.image_file_prefix + '_' + str(idx) + self.image_file_extention
+            image_file_path = str(self.datapath + '/' + image_file_name)
             if not os.path.exists(image_file_path):
-                print(f'could not load filename: {image_file_path}')
-                return None
+                print(f'Could not load filename: {image_file_path}')
+                return None, {}
+
             try:
-                spec_image=Image.open(image_file_path)  # Use Image from PIL
-
+                spec_image = Image.open(image_file_path)  # Use Image from PIL
             except Exception as e:
-                print(f'could not load image: {image_file_path}')
-                return None
+                print(f'Could not load image: {image_file_path}')
+                print(e)
+                return None, {}
 
-        return spec_image,metadata_dict
+            return spec_image, metadata_dict
+
+        # If idx is not in metadata_dict, return None and an empty dictionary
+        return None, {}

@@ -138,3 +138,55 @@ class JPGFileHandler(TorchSigFileHandler):
 
         # If idx is not in metadata_dict, return None and an empty dictionary
         return None, {}
+    
+    @staticmethod
+    def size(dataset_path: str) -> int:
+        """Returns the size of the dataset stored at the specified path.
+
+        Args:
+            dataset_path (str): The path to the dataset directory.
+
+        Returns:
+            int: The number of samples in the dataset.
+        """
+        if os.path.exists(dataset_path):
+            if os.path.exists(dataset_path + "/targets.pkl"):
+                with open(dataset_path + "/targets.pkl", "rb") as pickle_file:
+                    metadata_dict = pickle.load(pickle_file)
+                    return len(metadata_dict)
+        return 0
+    
+    
+    @staticmethod
+    def static_load(filename:str, idx: int) -> Tuple[np.ndarray, List[Dict[str, Any]]]:
+        """Loads a sample from the JPG file at the specified index.
+
+        Args:
+            filename (str): Path to the directory containing the JPG file.
+            idx (int): The index of the sample to load.
+
+        Returns:
+            Tuple[np.ndarray, List[Dict[str, Any]]]: The data and metadata for the sample.
+        """
+        if os.path.exists(filename):
+            if os.path.exists(filename + "/targets.pkl"):
+                with open(filename + "/targets.pkl", "rb") as pickle_file:
+                    metadata_dict = pickle.load(pickle_file)
+                    if idx in metadata_dict.keys():
+                        image_file_name = 'idx_' + str(idx) + '.jpg'
+                        image_file_path = str(filename + '/' + image_file_name)
+                        if not os.path.exists(image_file_path):
+                            print(f'Could not load filename: {image_file_path}')
+                            return None, {}
+
+                        try:
+                            spec_image = Image.open(image_file_path)  # Use Image from PIL
+                        except Exception as e:
+                            print(f'Could not load image: {image_file_path}')
+                            print(e)
+                            return None, {}
+
+                        return spec_image, metadata_dict[idx]
+
+        # If idx is not in metadata_dict, return None and an empty dictionary
+        return None, {}
